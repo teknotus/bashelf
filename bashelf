@@ -1,0 +1,51 @@
+#! /bin/bash
+ ____            _     _____ _     _____ 
+| __ )  __ _ ___| |__ | ____| |   |  ___|
+|  _ \ / _` / __| '_ \|  _| | |   | |_   
+| |_) | (_| \__ \ | | | |___| |___|  _|  
+|____/ \__,_|___/_| |_|_____|_____|_|    
+                                         
+
+########################## BashELF ############################
+##                                                           ##
+## A program to make binary executables written in pure bash ##
+##                                                           ##
+## Copyright Daniel Patrick Johnson @teknotus                ##
+###############################################################
+
+# boilerplate for
+# ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux)
+
+MAGICELF=$'\x7fELF'
+ELF64=$'\x02'
+LITTLEENDIAN=$'\x01'
+ELFVERSION1=$'\x01'
+LINUX=$'\x03'
+ABIVERSION='\x00'
+UNUSEDBYTES='\x00\x00\x00\x00\x00\x00\x00' # 7 unused bytes
+EXECUTABLE='\x02\x00'
+AMD64='\x3E\x00'
+EVERSION1='\x01\x00\x00\x00'
+
+echo -ne $MAGICELF$ELF64$LITTLEENDIAN$ELFVERSION1$LINUX$ABIVERSION
+echo -ne $UNUSEDBYTES$EXECUTABLE$AMD64$EVERSION1
+
+# Program specific values
+# Currently borrowed from an assembled, and stripped hello world
+# to get readelf to parse
+
+# Haven't found a good explanation for what ENTRY number should be
+ENTRY='\xb0\x00\x40\x00\x00\x00\x00\x00'
+PHOFF='\x40\x00\x00\x00\x00\x00\x00\x00'
+SHOFF='\x00\x01\x00\x00\x00\x00\x00\x00'
+FLAGS='\x00\x00\x00\x00'
+EHSIZE='\x40\x00'
+PHENTSIZE='\x38\x00'
+PHNUM='\x02\x00'
+SHENTSIZE='\x40\00'
+SHNUM='\x04\x00'
+SHSTRNDX='\x03\x00'
+
+echo -ne $ENTRY$PHOFF$SHOFF$FLAGS$EHSIZE$PHENTSIZE$PHNUM
+echo -ne $SHENTSIZE$SHNUM$SHSTRNDX
+
