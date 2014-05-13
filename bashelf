@@ -1,17 +1,20 @@
 #! /bin/bash
- ____            _     _____ _     _____ 
-| __ )  __ _ ___| |__ | ____| |   |  ___|
-|  _ \ / _` / __| '_ \|  _| | |   | |_   
-| |_) | (_| \__ \ | | | |___| |___|  _|  
-|____/ \__,_|___/_| |_|_____|_____|_|    
-                                         
-
+#   ____            _     _____ _     _____  #
+#  | __ )  __ _ ___| |__ | ____| |   |  ___| #
+#  |  _ \ / _` / __| '_ \|  _| | |   | |_    #
+#  | |_) | (_| \__ \ | | | |___| |___|  _|   #
+#  |____/ \__,_|___/_| |_|_____|_____|_|     #
+#
+#
 ########################## BashELF ############################
 ##                                                           ##
 ## A program to make binary executables written in pure bash ##
 ##                                                           ##
 ## Copyright Daniel Patrick Johnson @teknotus                ##
 ###############################################################
+
+# command line option stuff goes here eventually
+OUTFILE="a.out"
 
 # boilerplate for
 # ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux)
@@ -27,8 +30,11 @@ EXECUTABLE='\x02\x00'
 AMD64='\x3E\x00'
 EVERSION1='\x01\x00\x00\x00'
 
-echo -ne $MAGICELF$ELF64$LITTLEENDIAN$ELFVERSION1$LINUX$ABIVERSION
-echo -ne $UNUSEDBYTES$EXECUTABLE$AMD64$EVERSION1
+# stdout main ELF header
+header1(){
+  echo -ne $MAGICELF$ELF64$LITTLEENDIAN$ELFVERSION1$LINUX$ABIVERSION
+  echo -ne $UNUSEDBYTES$EXECUTABLE$AMD64$EVERSION1
+}
 
 # Program specific values
 # Currently borrowed from an assembled, and stripped hello world
@@ -46,6 +52,29 @@ SHENTSIZE='\x40\00'
 SHNUM='\x04\x00'
 SHSTRNDX='\x03\x00'
 
-echo -ne $ENTRY$PHOFF$SHOFF$FLAGS$EHSIZE$PHENTSIZE$PHNUM
-echo -ne $SHENTSIZE$SHNUM$SHSTRNDX
+header2(){
+  echo -ne $ENTRY$PHOFF$SHOFF$FLAGS$EHSIZE$PHENTSIZE$PHNUM
+  echo -ne $SHENTSIZE$SHNUM$SHSTRNDX
+}
+
+# Got tired of hand creating hex escape strings
+# this creates them in little endian
+# arg1 number to format
+# arg2 how many bytes in result
+
+H(){
+  local size=`echo "2 * $2" | bc`
+  local hexnum=`printf "%0${size}x" $1`
+  local hexsplit=`echo $hexnum | sed 's/\([a-f0-9]\{2\}\)/\1 /g'`
+  local reversed=`echo $hexsplit | awk '{for (i=NF; i>0; i--) printf("\\\x%s",$i);}'`
+  echo $reversed
+}
+
+# since they are globals I can arbitrarily change values, and
+# they will make it into the output
+
+ENTRY=`H 6000000 8`
+
+header1 > $OUTFILE
+header2 >> $OUTFILE
 
