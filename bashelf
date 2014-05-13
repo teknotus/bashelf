@@ -47,9 +47,9 @@ SHOFF='\x00\x01\x00\x00\x00\x00\x00\x00'
 FLAGS='\x00\x00\x00\x00'
 EHSIZE='\x40\x00'
 PHENTSIZE='\x38\x00'
-PHNUM='\x02\x00'
+PHNUM='\x01\x00'
 SHENTSIZE='\x40\00'
-SHNUM='\x04\x00'
+SHNUM='\x01\x00'
 SHSTRNDX='\x03\x00'
 
 header2(){
@@ -74,7 +74,47 @@ H(){
 # they will make it into the output
 
 ENTRY=`H 6000000 8`
+SHOFF=`H 120 8`
 
 header1 > $OUTFILE
 header2 >> $OUTFILE
 
+# program header values
+PTNULL=`H 0 4`
+PTLOAD=`H 1 4`
+PH(){
+  local ptype=`H 1 4`
+  local flags=`H 5 4` #read execute
+  local offset=`H 0 8`
+  local vaddr=`H 4194304 8`
+  local paddr=`H 4194304 8`
+  local filesz=`H 210 8`
+  local memsz=`H 210 8`
+  local align=`H 2097152 8`
+  echo -ne $ptype$flags$offset$vaddr$paddr$filesz$memsz$align
+}
+
+PH >> $OUTFILE
+
+SHTYPENULL=0
+SHTYPEPROGBITS=1
+SHTYPESTRTAB=3
+
+SH(){
+  local name=`H 1 4`
+  local shtype=`H $SHTYPEPROGBITS 4`
+  local flags=`H 6 8`
+  local addr=`H 4194480 8`
+  local offset=`H 176 8`
+  local size=`H 34 8`
+  local link=`H 0 4`
+  local info=`H 0 4`
+  local addralign=`H 16 8`
+  local entsize=`H 0 8`
+  echo -ne $name$shtype$flags$addr$offset$size$link$info$addralign$entsize
+}
+
+SH >> $OUTFILE
+
+STRINGTABLE='\x00.text\x00'
+echo -ne $STRINGTABLE >> $OUTFILE
